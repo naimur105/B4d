@@ -55,261 +55,252 @@
 namespace B4d
 {
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4ThreadLocal
-G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = nullptr;
+  G4ThreadLocal
+      G4GlobalMagFieldMessenger *DetectorConstruction::fMagFieldMessenger = nullptr;
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4VPhysicalVolume* DetectorConstruction::Construct()
-{
-  // Define materials
-  DefineMaterials();
+  G4VPhysicalVolume *DetectorConstruction::Construct()
+  {
+    // Define materials
+    DefineMaterials();
 
-  // Define volumes
-  return DefineVolumes();
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void DetectorConstruction::DefineMaterials()
-{
-  // Lead material defined using NIST Manager
-  auto nistManager = G4NistManager::Instance();
-  nistManager->FindOrBuildMaterial("G4_Pb");
-
-  // Liquid argon material
-  G4double a;  // mass of a mole;
-  G4double z;  // z=mean number of protons;
-  G4double density;
-  new G4Material("liquidArgon", z=18., a= 39.95*g/mole, density= 1.390*g/cm3);
-         // The argon by NIST Manager is a gas with a different density
-
-  // Vacuum
-  new G4Material("Galactic", z=1., a=1.01*g/mole,density= universe_mean_density,
-                  kStateGas, 2.73*kelvin, 3.e-18*pascal);
-
-  // Print materials
-  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
-{
-  // Geometry parameters
-  G4int  nofLayers = 10;
-  G4double  absoThickness = 10.*mm;
-  G4double  gapThickness =  5.*mm;
-  G4double  calorSizeXY  = 10.*cm;
-
-  auto  layerThickness = absoThickness + gapThickness;
-  auto  calorThickness = nofLayers * layerThickness;
-  auto  worldSizeXY = 1.2 * calorSizeXY;
-  auto  worldSizeZ  = 1.2 * calorThickness;
-
-  // Get materials
-  auto defaultMaterial = G4Material::GetMaterial("Galactic");
-  auto absorberMaterial = G4Material::GetMaterial("G4_Pb");
-  auto gapMaterial = G4Material::GetMaterial("liquidArgon");
-
-  if ( ! defaultMaterial || ! absorberMaterial || ! gapMaterial ) {
-    G4ExceptionDescription msg;
-    msg << "Cannot retrieve materials already defined.";
-    G4Exception("DetectorConstruction::DefineVolumes()",
-      "MyCode0001", FatalException, msg);
+    // Define volumes
+    return DefineVolumes();
   }
 
-  //
-  // World
-  //
-  auto worldS
-    = new G4Box("World",           // its name
-                 worldSizeXY/2, worldSizeXY/2, worldSizeZ/2); // its size
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  auto worldLV
-    = new G4LogicalVolume(
-                 worldS,           // its solid
-                 defaultMaterial,  // its material
-                 "World");         // its name
+  void DetectorConstruction::DefineMaterials()
+  {
+    // Lead material defined using NIST Manager
+    auto nistManager = G4NistManager::Instance();
+    nistManager->FindOrBuildMaterial("G4_Si");
 
-  auto worldPV = new G4PVPlacement(nullptr,  // no rotation
-    G4ThreeVector(),                         // at (0,0,0)
-    worldLV,                                 // its logical volume
-    "World",                                 // its name
-    nullptr,                                 // its mother  volume
-    false,                                   // no boolean operation
-    0,                                       // copy number
-    fCheckOverlaps);                         // checking overlaps
+    // Liquid argon material
+    G4double a; // mass of a mole;
+    G4double z; // z=mean number of protons;
+    G4double density;
+    // new G4Material("liquidArgon", z = 18., a = 39.95 * g / mole, density = 1.390 * g / cm3);
+    // The argon by NIST Manager is a gas with a different density
 
-  //
-  // Calorimeter
-  //
-  auto calorimeterS
-    = new G4Box("Calorimeter",     // its name
-                 calorSizeXY/2, calorSizeXY/2, calorThickness/2); // its size
+    // Vacuum
+    new G4Material("Galactic", z = 1., a = 1.01 * g / mole, density = universe_mean_density,
+                   kStateGas, 2.73 * kelvin, 3.e-18 * pascal);
 
-  auto calorLV
-    = new G4LogicalVolume(
-                 calorimeterS,    // its solid
-                 defaultMaterial, // its material
-                 "Calorimeter");  // its name
+    // Print materials
+    G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+  }
 
-  new G4PVPlacement(nullptr,  // no rotation
-    G4ThreeVector(),          // at (0,0,0)
-    calorLV,                  // its logical volume
-    "Calorimeter",            // its name
-    worldLV,                  // its mother  volume
-    false,                    // no boolean operation
-    0,                        // copy number
-    fCheckOverlaps);          // checking overlaps
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  //
-  // Layer
-  //
-  auto layerS
-    = new G4Box("Layer",           // its name
-                 calorSizeXY/2, calorSizeXY/2, layerThickness/2); // its size
+  G4VPhysicalVolume *DetectorConstruction::DefineVolumes()
+  {
+    // Geometry parameters
+    G4int nofLayers = 1;
+    G4double absoThickness = 10. * mm;
+    // G4double gapThickness = 5. * mm;
+    G4double calorSizeXY = 10. * cm;
 
-  auto layerLV
-    = new G4LogicalVolume(
-                 layerS,           // its solid
-                 defaultMaterial,  // its material
-                 "Layer");         // its name
+    auto layerThickness = absoThickness;
+    auto calorThickness = nofLayers * layerThickness;
+    auto worldSizeXY = 1.2 * calorSizeXY;
+    auto worldSizeZ = 1.2 * calorThickness;
 
-  new G4PVReplica(
-                 "Layer",          // its name
-                 layerLV,          // its logical volume
-                 calorLV,          // its mother
-                 kZAxis,           // axis of replication
-                 nofLayers,        // number of replica
-                 layerThickness);  // witdth of replica
+    // Get materials
+    auto defaultMaterial = G4Material::GetMaterial("Galactic");
+    auto absorberMaterial = G4Material::GetMaterial("G4_Si");
+    // auto gapMaterial = G4Material::GetMaterial("liquidArgon");
 
-  //
-  // Absorber
-  //
-  auto absorberS
-    = new G4Box("Abso",            // its name
-                 calorSizeXY/2, calorSizeXY/2, absoThickness/2); // its size
+    if (!defaultMaterial || !absorberMaterial)
+    {
+      G4ExceptionDescription msg;
+      msg << "Cannot retrieve materials already defined.";
+      G4Exception("DetectorConstruction::DefineVolumes()",
+                  "MyCode0001", FatalException, msg);
+    }
 
-  auto absorberLV
-    = new G4LogicalVolume(
-                 absorberS,        // its solid
-                 absorberMaterial, // its material
-                 "AbsoLV");          // its name
+    //
+    // World
+    //
+    auto worldS = new G4Box("World",                                           // its name
+                            worldSizeXY / 2, worldSizeXY / 2, worldSizeZ / 2); // its size
 
-  new G4PVPlacement(nullptr,                   // no rotation
-    G4ThreeVector(0., 0., -gapThickness / 2),  //  its position
-    absorberLV,                                // its logical volume
-    "Abso",                                    // its name
-    layerLV,                                   // its mother  volume
-    false,                                     // no boolean operation
-    0,                                         // copy number
-    fCheckOverlaps);                           // checking overlaps
+    auto worldLV = new G4LogicalVolume(
+        worldS,          // its solid
+        defaultMaterial, // its material
+        "World");        // its name
 
-  //
-  // Gap
-  //
-  auto gapS
-    = new G4Box("Gap",             // its name
-                 calorSizeXY/2, calorSizeXY/2, gapThickness/2); // its size
+    auto worldPV = new G4PVPlacement(nullptr,         // no rotation
+                                     G4ThreeVector(), // at (0,0,0)
+                                     worldLV,         // its logical volume
+                                     "World",         // its name
+                                     nullptr,         // its mother  volume
+                                     false,           // no boolean operation
+                                     0,               // copy number
+                                     fCheckOverlaps); // checking overlaps
 
-  auto gapLV
-    = new G4LogicalVolume(
-                 gapS,             // its solid
-                 gapMaterial,      // its material
-                 "GapLV");      // its name
+    //
+    // Calorimeter
+    //
+    auto calorimeterS = new G4Box("Calorimeter",                                         // its name
+                                  calorSizeXY / 2, calorSizeXY / 2, calorThickness / 2); // its size
 
-  new G4PVPlacement(nullptr,                   // no rotation
-    G4ThreeVector(0., 0., absoThickness / 2),  //  its position
-    gapLV,                                     // its logical volume
-    "Gap",                                     // its name
-    layerLV,                                   // its mother  volume
-    false,                                     // no boolean operation
-    0,                                         // copy number
-    fCheckOverlaps);                           // checking overlaps
+    auto calorLV = new G4LogicalVolume(
+        calorimeterS,    // its solid
+        defaultMaterial, // its material
+        "Calorimeter");  // its name
 
-  //
-  // print parameters
-  //
-  G4cout
-    << G4endl
-    << "------------------------------------------------------------" << G4endl
-    << "---> The calorimeter is " << nofLayers << " layers of: [ "
-    << absoThickness/mm << "mm of " << absorberMaterial->GetName()
-    << " + "
-    << gapThickness/mm << "mm of " << gapMaterial->GetName() << " ] " << G4endl
-    << "------------------------------------------------------------" << G4endl;
+    new G4PVPlacement(nullptr,         // no rotation
+                      G4ThreeVector(), // at (0,0,0)
+                      calorLV,         // its logical volume
+                      "Calorimeter",   // its name
+                      worldLV,         // its mother  volume
+                      false,           // no boolean operation
+                      0,               // copy number
+                      fCheckOverlaps); // checking overlaps
 
-  //
-  // Visualization attributes
-  //
-  worldLV->SetVisAttributes (G4VisAttributes::GetInvisible());
+    //
+    // Layer
+    //
+    auto layerS = new G4Box("Layer",                                               // its name
+                            calorSizeXY / 2, calorSizeXY / 2, layerThickness / 2); // its size
 
-  auto simpleBoxVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0));
-  simpleBoxVisAtt->SetVisibility(true);
-  calorLV->SetVisAttributes(simpleBoxVisAtt);
+    auto layerLV = new G4LogicalVolume(
+        layerS,          // its solid
+        defaultMaterial, // its material
+        "Layer");        // its name
 
-  //
-  // Always return the physical World
-  //
-  return worldPV;
-}
+    new G4PVReplica(
+        "Layer",         // its name
+        layerLV,         // its logical volume
+        calorLV,         // its mother
+        kZAxis,          // axis of replication
+        nofLayers,       // number of replica
+        layerThickness); // witdth of replica
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+    //
+    // Absorber
+    //
+    auto absorberS = new G4Box("Abso",                                               // its name
+                               calorSizeXY / 2, calorSizeXY / 2, absoThickness / 2); // its size
 
-void DetectorConstruction::ConstructSDandField()
-{
-  G4SDManager::GetSDMpointer()->SetVerboseLevel(1);
-  //
-  // Scorers
-  //
+    auto absorberLV = new G4LogicalVolume(
+        absorberS,        // its solid
+        absorberMaterial, // its material
+        "AbsoLV");        // its name
 
-  // declare Absorber as a MultiFunctionalDetector scorer
-  //
-  auto absDetector = new G4MultiFunctionalDetector("Absorber");
-  G4SDManager::GetSDMpointer()->AddNewDetector(absDetector);
+    new G4PVPlacement(nullptr,                   // no rotation
+                      G4ThreeVector(0., 0., 0.), //  its position
+                      absorberLV,                // its logical volume
+                      "Abso",                    // its name
+                      layerLV,                   // its mother  volume
+                      false,                     // no boolean operation
+                      0,                         // copy number
+                      fCheckOverlaps);           // checking overlaps
 
-  G4VPrimitiveScorer* primitive;
-  primitive = new G4PSEnergyDeposit("Edep");
-  absDetector->RegisterPrimitive(primitive);
+    //
+    // Gap
+    //
+    // auto gapS = new G4Box("Gap",                                               // its name
+    //                       calorSizeXY / 2, calorSizeXY / 2, gapThickness / 2); // its size
 
-  primitive = new G4PSTrackLength("TrackLength");
-  auto charged = new G4SDChargedFilter("chargedFilter");
-  primitive ->SetFilter(charged);
-  absDetector->RegisterPrimitive(primitive);
+    // auto gapLV = new G4LogicalVolume(
+    //     gapS,        // its solid
+    //     gapMaterial, // its material
+    //     "GapLV");    // its name
 
-  SetSensitiveDetector("AbsoLV",absDetector);
+    // new G4PVPlacement(nullptr,                                  // no rotation
+    //                   G4ThreeVector(0., 0., absoThickness / 2), //  its position
+    //                   gapLV,                                    // its logical volume
+    //                   "Gap",                                    // its name
+    //                   layerLV,                                  // its mother  volume
+    //                   false,                                    // no boolean operation
+    //                   0,                                        // copy number
+    //                   fCheckOverlaps);                          // checking overlaps
 
-  // declare Gap as a MultiFunctionalDetector scorer
-  //
-  auto gapDetector = new G4MultiFunctionalDetector("Gap");
-  G4SDManager::GetSDMpointer()->AddNewDetector(gapDetector);
+    //
+    // print parameters
+    //
+    G4cout
+        << G4endl
+        << "------------------------------------------------------------" << G4endl
+        << "---> The calorimeter is " << nofLayers << " layers of: [ "
+        << absoThickness / mm << "mm of " << absorberMaterial->GetName()
+        << " + "
+        // << gapThickness / mm << "mm of " << gapMaterial->GetName() << " ] " << G4endl
+        << "------------------------------------------------------------" << G4endl;
 
-  primitive = new G4PSEnergyDeposit("Edep");
-  gapDetector->RegisterPrimitive(primitive);
+    //
+    // Visualization attributes
+    //
+    worldLV->SetVisAttributes(G4VisAttributes::GetInvisible());
 
-  primitive = new G4PSTrackLength("TrackLength");
-  primitive ->SetFilter(charged);
-  gapDetector->RegisterPrimitive(primitive);
+    auto simpleBoxVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));
+    simpleBoxVisAtt->SetVisibility(true);
+    calorLV->SetVisAttributes(simpleBoxVisAtt);
 
-  SetSensitiveDetector("GapLV",gapDetector);
+    //
+    // Always return the physical World
+    //
+    return worldPV;
+  }
 
-  //
-  // Magnetic field
-  //
-  // Create global magnetic field messenger.
-  // Uniform magnetic field is then created automatically if
-  // the field value is not zero.
-  G4ThreeVector fieldValue;
-  fMagFieldMessenger = new G4GlobalMagFieldMessenger(fieldValue);
-  fMagFieldMessenger->SetVerboseLevel(1);
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  // Register the field messenger for deleting
-  G4AutoDelete::Register(fMagFieldMessenger);
-}
+  void DetectorConstruction::ConstructSDandField()
+  {
+    G4SDManager::GetSDMpointer()->SetVerboseLevel(1);
+    //
+    // Scorers
+    //
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+    // declare Absorber as a MultiFunctionalDetector scorer
+    //
+    auto absDetector = new G4MultiFunctionalDetector("Absorber");
+    G4SDManager::GetSDMpointer()->AddNewDetector(absDetector);
+
+    G4VPrimitiveScorer *primitive;
+    primitive = new G4PSEnergyDeposit("Edep");
+    absDetector->RegisterPrimitive(primitive);
+
+    primitive = new G4PSTrackLength("TrackLength");
+    auto charged = new G4SDChargedFilter("chargedFilter");
+    primitive->SetFilter(charged);
+    absDetector->RegisterPrimitive(primitive);
+
+    SetSensitiveDetector("AbsoLV", absDetector);
+
+    // declare Gap as a MultiFunctionalDetector scorer
+    //
+    // auto gapDetector = new G4MultiFunctionalDetector("Gap");
+    // G4SDManager::GetSDMpointer()->AddNewDetector(gapDetector);
+
+    // primitive = new G4PSEnergyDeposit("Edep");
+    // gapDetector->RegisterPrimitive(primitive);
+
+    // primitive = new G4PSTrackLength("TrackLength");
+    // primitive->SetFilter(charged);
+    // gapDetector->RegisterPrimitive(primitive);
+
+    // SetSensitiveDetector("GapLV", gapDetector);
+
+    //
+    // Magnetic field
+    //
+    // Create global magnetic field messenger.
+    // Uniform magnetic field is then created automatically if
+    // the field value is not zero.
+    G4ThreeVector fieldValue;
+    fMagFieldMessenger = new G4GlobalMagFieldMessenger(fieldValue);
+    fMagFieldMessenger->SetVerboseLevel(1);
+
+    // Register the field messenger for deleting
+    G4AutoDelete::Register(fMagFieldMessenger);
+  }
+
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 }
