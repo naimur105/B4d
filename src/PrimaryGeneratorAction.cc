@@ -43,67 +43,73 @@
 namespace B4
 {
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-PrimaryGeneratorAction::PrimaryGeneratorAction()
-{
-  G4int nofParticles = 1;
-  fParticleGun = new G4ParticleGun(nofParticles);
+  PrimaryGeneratorAction::PrimaryGeneratorAction()
+  {
+    G4int nofParticles = 1;
+    fParticleGun = new G4ParticleGun(nofParticles);
 
-  // default particle kinematic
-  //
-  auto particleDefinition
-    = G4ParticleTable::GetParticleTable()->FindParticle("e-");
-  fParticleGun->SetParticleDefinition(particleDefinition);
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
-  fParticleGun->SetParticleEnergy(50.*MeV);
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-PrimaryGeneratorAction::~PrimaryGeneratorAction()
-{
-  delete fParticleGun;
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
-{
-  // This function is called at the begining of event
-
-  // In order to avoid dependence of PrimaryGeneratorAction
-  // on DetectorConstruction class we get world volume
-  // from G4LogicalVolumeStore
-  //
-  G4double worldZHalfLength = 0.;
-  auto worldLV = G4LogicalVolumeStore::GetInstance()->GetVolume("World");
-
-  // Check that the world volume has box shape
-  G4Box* worldBox = nullptr;
-  if (  worldLV ) {
-    worldBox = dynamic_cast<G4Box*>(worldLV->GetSolid());
+    // default particle kinematic
+    //
+    auto particleDefinition = G4ParticleTable::GetParticleTable()->FindParticle("e-");
+    fParticleGun->SetParticleDefinition(particleDefinition);
+    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0., 0., 1.));
+    fParticleGun->SetParticleEnergy(50. * MeV);
   }
 
-  if ( worldBox ) {
-    worldZHalfLength = worldBox->GetZHalfLength();
-  }
-  else  {
-    G4ExceptionDescription msg;
-    msg << "World volume of box shape not found." << G4endl;
-    msg << "Perhaps you have changed geometry." << G4endl;
-    msg << "The gun will be place in the center.";
-    G4Exception("PrimaryGeneratorAction::GeneratePrimaries()",
-      "MyCode0002", JustWarning, msg);
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+  PrimaryGeneratorAction::~PrimaryGeneratorAction()
+  {
+    delete fParticleGun;
   }
 
-  // Set gun position
-  fParticleGun
-    ->SetParticlePosition(G4ThreeVector(0., 0., -worldZHalfLength));
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  fParticleGun->GeneratePrimaryVertex(anEvent);
-}
+  void PrimaryGeneratorAction::GeneratePrimaries(G4Event *anEvent)
+  {
+    // This function is called at the begining of event
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+    // In order to avoid dependence of PrimaryGeneratorAction
+    // on DetectorConstruction class we get world volume
+    // from G4LogicalVolumeStore
+    //
+    G4double worldZHalfLength = 0.;
+    auto worldLV = G4LogicalVolumeStore::GetInstance()->GetVolume("World");
+
+    // Check that the world volume has box shape
+    G4Box *worldBox = nullptr;
+    if (worldLV)
+    {
+      worldBox = dynamic_cast<G4Box *>(worldLV->GetSolid());
+    }
+
+    if (worldBox)
+    {
+      worldZHalfLength = worldBox->GetZHalfLength();
+    }
+    else
+    {
+      G4ExceptionDescription msg;
+      msg << "World volume of box shape not found." << G4endl;
+      msg << "Perhaps you have changed geometry." << G4endl;
+      msg << "The gun will be place in the center.";
+      G4Exception("PrimaryGeneratorAction::GeneratePrimaries()",
+                  "MyCode0002", JustWarning, msg);
+    }
+
+    // Set gun position
+    G4double layerSizeXY = 10. * cm;
+    G4double x_position = G4UniformRand() * layerSizeXY - 0.5 * layerSizeXY;
+    G4double y_position = G4UniformRand() * layerSizeXY - 0.5 * layerSizeXY;
+    // G4double z_position = G4UniformRand() * z_length - 0.5 * z_length;
+    fParticleGun
+        ->SetParticlePosition(G4ThreeVector(x_position, y_position, -(worldZHalfLength + 100.)));
+
+    fParticleGun->GeneratePrimaryVertex(anEvent);
+  }
+
+  //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 }
